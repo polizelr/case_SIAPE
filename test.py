@@ -1,18 +1,14 @@
-import boto3
 import zipfile
 from io import BytesIO
 
 def zip_and_upload_to_s3(file_list, s3_bucket, s3_prefix):
     """
-    Função que recebe uma lista de arquivos, compacta cada um e envia para um bucket do S3.
+    Função que recebe uma lista de arquivos, compacta cada um e envia para um bucket do S3 usando apenas dbutils.
 
     :param file_list: Lista de arquivos obtidos com dbutils.fs.ls
     :param s3_bucket: Nome do bucket S3 onde os arquivos serão salvos
     :param s3_prefix: Prefixo (caminho) dentro do bucket S3 onde os arquivos serão salvos
     """
-    # Inicializa o cliente S3
-    s3_client = boto3.client('s3')
-
     for file_info in file_list:
         file_path = file_info.path  # Caminho completo do arquivo
         file_name = file_info.name  # Nome do arquivo
@@ -34,8 +30,8 @@ def zip_and_upload_to_s3(file_list, s3_bucket, s3_prefix):
         # Define o caminho completo no S3
         s3_key = f"{s3_prefix}/{zip_file_name}"
 
-        # Faz o upload do arquivo ZIP para o S3
-        s3_client.upload_fileobj(zip_buffer, s3_bucket, s3_key)
+        # Salva o arquivo ZIP no S3 usando dbutils
+        dbutils.fs.put(f"s3a://{s3_bucket}/{s3_key}", zip_buffer.getvalue(), overwrite=True)
         print(f"Arquivo {file_name} compactado e enviado para s3://{s3_bucket}/{s3_key}")
 
 # Exemplo de uso
