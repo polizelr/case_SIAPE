@@ -1,6 +1,5 @@
 import boto3
 import zipfile
-import os
 from io import BytesIO
 
 def zip_and_upload_to_s3(file_list, s3_bucket, s3_prefix):
@@ -15,8 +14,8 @@ def zip_and_upload_to_s3(file_list, s3_bucket, s3_prefix):
     s3_client = boto3.client('s3')
 
     for file_info in file_list:
-        file_path = file_info.path
-        file_name = os.path.basename(file_path)
+        file_path = file_info.path  # Caminho completo do arquivo
+        file_name = file_info.name  # Nome do arquivo
         zip_file_name = f"{file_name}.zip"
 
         # Cria um buffer de memória para o arquivo ZIP
@@ -24,9 +23,10 @@ def zip_and_upload_to_s3(file_list, s3_bucket, s3_prefix):
 
         # Cria o arquivo ZIP
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            # Lê o conteúdo do arquivo usando dbutils
+            file_content = dbutils.fs.head(file_path)
             # Adiciona o arquivo ao ZIP
-            with open(file_path, 'rb') as file:
-                zipf.writestr(file_name, file.read())
+            zipf.writestr(file_name, file_content)
 
         # Move o cursor do buffer para o início
         zip_buffer.seek(0)
@@ -40,7 +40,7 @@ def zip_and_upload_to_s3(file_list, s3_bucket, s3_prefix):
 
 # Exemplo de uso
 # Suponha que você tenha uma lista de arquivos obtidos com dbutils.fs.ls
-# file_list = dbutils.fs.ls("/mnt/your_directory")
+file_list = dbutils.fs.ls("/mnt/your_directory")
 
 # Chama a função para compactar e enviar os arquivos para o S3
-# zip_and_upload_to_s3(file_list, "your-s3-bucket", "your/s3/prefix")
+zip_and_upload_to_s3(file_list, "your-s3-bucket", "your/s3/prefix")
