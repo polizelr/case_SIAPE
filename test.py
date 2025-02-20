@@ -27,11 +27,15 @@ def zip_and_upload_to_s3(file_list, s3_bucket, s3_prefix):
         # Move o cursor do buffer para o início
         zip_buffer.seek(0)
 
+        # Converte o conteúdo binário para base64 (string)
+        import base64
+        zip_content_base64 = base64.b64encode(zip_buffer.getvalue()).decode('utf-8')
+
         # Define o caminho completo no S3
         s3_key = f"{s3_prefix}/{zip_file_name}"
 
         # Salva o arquivo ZIP no S3 usando dbutils
-        dbutils.fs.put(f"s3a://{s3_bucket}/{s3_key}", zip_buffer.getvalue(), overwrite=True)
+        dbutils.fs.put(f"s3a://{s3_bucket}/{s3_key}", zip_content_base64, overwrite=True)
         print(f"Arquivo {file_name} compactado e enviado para s3://{s3_bucket}/{s3_key}")
 
 # Exemplo de uso
